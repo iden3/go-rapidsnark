@@ -1,9 +1,6 @@
 package rapidsnark
 
 /*
-#cgo LDFLAGS: -lrapidsnark -lgmp -lstdc++
-// # -- cgo LDFLAGS: -lrapidsnark -lgmp -lstdc++ -L./ -L../rapidsnark/depends/gmp/package/lib
-
 #include <stdlib.h>
 #include "select_rapidsnark.h"
 */

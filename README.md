@@ -6,6 +6,13 @@ A go wrapper for the RapidSNARK C++ library.
 
 ## Build using pre-built vendored libraries.
 
+For few architectures, you can use pre-built vendored libraries. And just use
+this module without any externally built dependencies.
+
+Supported architectures are:
+* MacOS x86_64
+* MacOS Apple Silicon M1
+
 ## Build using custom libraries.
 
 You need `gmp` and `rapidsnark` libraries available on build host.
@@ -18,7 +25,7 @@ Supposed all needed files are in following directories:
 ```shell
 export CGO_CFLAGS="-I${HOME}/src/rapidsnark/src" 
 export CGO_LDFLAGS="-L${HOME}/src/rapidsnark/build_prover/src -L${HOME}/src/rapidsnark/depends/gmp/package/lib"
-go build -tags dymamic
+go build -tags dynamic
 ```
 
 Tag `dynamic` is required to exclude usage of vendored libraries.
