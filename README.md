@@ -43,6 +43,4 @@ Tag `dynamic` is required to exclude usage of vendored libraries.
 
 ## Examples
 
-Library usage example is available in [`/cmd/proof`](cmd/proof) directory.
-
-[README](cmd/proof/README.md)
+Library usage example is available in [`/cmd/proof/`](cmd/proof) directory.
