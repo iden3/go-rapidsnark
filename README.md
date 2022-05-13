@@ -12,6 +12,10 @@ this module without any externally built dependencies.
 Supported architectures are:
 * MacOS x86_64
 * MacOS Apple Silicon M1
+* Linux x86_64
+* Linux ARM64 v8
+
+Minimum glibc version that should be available on build host is 2.31.
 
 ## Build using custom libraries.
 
