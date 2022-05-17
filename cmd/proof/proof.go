@@ -46,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	proof, publicInputs, err := rapidsnark.Groth16Prover(zkeyBytes, wtnsBytes)
+	proof, publicInputs, err := rapidsnark.Groth16ProverRaw(zkeyBytes, wtnsBytes)
 	if err != nil {
 		panic(err)
 	}
