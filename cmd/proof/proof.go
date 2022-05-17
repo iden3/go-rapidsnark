@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/iden3/go-rapidsnark/prover"
 	"os"
-
-	"github.com/iden3/go-rapidsnark"
 )
 
 var zkeyFName = flag.String("zkey", "", "circuit zkey file")
@@ -46,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	proof, publicInputs, err := rapidsnark.Groth16ProverRaw(zkeyBytes, wtnsBytes)
+	proof, publicInputs, err := prover.Groth16ProverRaw(zkeyBytes, wtnsBytes)
 	if err != nil {
 		panic(err)
 	}
