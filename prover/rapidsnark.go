@@ -1,4 +1,4 @@
-package rapidsnark
+package prover
 
 /*
 #include <stdlib.h>
@@ -7,15 +7,40 @@ package rapidsnark
 import "C"
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/iden3/go-rapidsnark/types"
 	"unsafe"
 )
 
 const bufferSize = 16384
 const MaxBufferSize = 10485760
 
+// Groth16Prover generates proof and returns proof and pubsignals as types.ZKProof
 func Groth16Prover(zkey []byte,
+	witness []byte) (proof *types.ZKProof, err error) {
+	proofStr, pubSignalsStr, err := Groth16ProverRaw(zkey, witness)
+	if err != nil {
+		return nil, err
+	}
+	var proofData types.ProofData
+	var pubSignals []string
+
+	err = json.Unmarshal([]byte(proofStr), &proofData)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(pubSignalsStr), &pubSignals)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ZKProof{Proof: &proofData, PubSignals: pubSignals}, nil
+}
+
+// Groth16ProverRaw generates proof and returns proof and pubsignals as json string
+func Groth16ProverRaw(zkey []byte,
 	witness []byte) (proof string, publicInputs string, err error) {
 	if len(zkey) == 0 {
 		return "", "", errors.New("zkey is empty")
