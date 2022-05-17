@@ -1,4 +1,4 @@
-package rapidsnark
+package prover
 
 /*
 #include <stdlib.h>
