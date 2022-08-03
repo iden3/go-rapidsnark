@@ -10,8 +10,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/iden3/go-rapidsnark/types"
 	"unsafe"
+
+	"github.com/iden3/go-rapidsnark/types"
 )
 
 const bufferSize = 16384
@@ -61,8 +62,8 @@ func Groth16ProverRaw(zkey []byte,
 		r := C.groth16_prover(
 			unsafe.Pointer(&zkey[0]), C.ulong(len(zkey)),
 			unsafe.Pointer(&witness[0]), C.ulong(len(witness)),
-			(*C.char)(unsafe.Pointer(&proofBuffer[0])), C.ulong(proofBufSize),
-			(*C.char)(unsafe.Pointer(&publicBuffer[0])), C.ulong(publicBufSize),
+			(*C.char)(unsafe.Pointer(&proofBuffer[0])), (*C.ulong)(unsafe.Pointer(&proofBufSize)),
+			(*C.char)(unsafe.Pointer(&publicBuffer[0])), (*C.ulong)(unsafe.Pointer(&publicBufSize)),
 			(*C.char)(unsafe.Pointer(&errorMessage[0])), errorBufSize)
 
 		if r != 0 {
