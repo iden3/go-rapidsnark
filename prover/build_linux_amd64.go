@@ -1,4 +1,4 @@
-//go:build !dynamic
+//go:build !dynamic && !noasm
 
 package prover
 
