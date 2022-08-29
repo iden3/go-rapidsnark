@@ -27,11 +27,11 @@ using `golang` Docker container, all tools are already installed.
 ## Usage on older hardware
 
 Older x86_64 processors may lack support for ADX and BMI2 instruction sets used to optimize rapidsnark computations.
-To use this library on such processors on linux use `noasm` build tag.
+To use this library on such processors on linux use `rapidsnark_noasm` build tag.
 
 ```shell
-go build -tags noasm
-go test -tags noasm
+go build -tags rapidsnark_noasm
+go test -tags rapidsnark_noasm
 ```
 
 ## Build using custom RapidSNARK library.
