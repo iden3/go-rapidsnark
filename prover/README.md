@@ -14,7 +14,7 @@ libraries.
 
 Supported architectures are:
 * MacOS x86_64
-* MacOS Apple Silicon M1
+* MacOS ARM64 Apple Silicon
 * Linux x86_64
 * Linux ARM64 v8
 
@@ -23,6 +23,16 @@ Minimum glibc version that should be available on build host is 2.31.
 Also, you need a C/C++ compiler and standard libraries available. On Ubuntu it
 would be enough to install `build-essential` package. If you build your project
 using `golang` Docker container, all tools are already installed.
+
+## Usage on older hardware
+
+Older x86_64 processors may lack support for ADX and BMI2 instruction sets used to optimize rapidsnark computations.
+To use this library on such processors on linux use `rapidsnark_noasm` build tag.
+
+```shell
+go build -tags rapidsnark_noasm
+go test -tags rapidsnark_noasm
+```
 
 ## Build using custom RapidSNARK library.
 
