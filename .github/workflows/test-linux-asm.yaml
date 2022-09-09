@@ -26,5 +26,5 @@ jobs:
         uses: actions/checkout@v2
       - name: Run tests
         # rapidsnark_asm build tag enables asm optimizations
-        run: go test -tags rapidsnark_asm -v -covermode=count
+        run: cd prover && go test -tags rapidsnark_asm -v -covermode=count
 

@@ -26,4 +26,4 @@ jobs:
         uses: actions/checkout@v2
       - name: Run tests
         # rapidsnark_noasm build tag is needed for older GitHub Action runners
-        run: go test -tags rapidsnark_noasm -v -covermode=count
+        run: cd prover && go test -tags rapidsnark_noasm -v -covermode=count
