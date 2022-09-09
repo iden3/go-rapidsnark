@@ -1,4 +1,4 @@
-//go:build linux && amd64 && !dynamic && rapidsnark_noasm
+//go:build linux && amd64 && !dynamic && rapidsnark_noasm && !rapidsnark_asm
 
 package prover
 

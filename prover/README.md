@@ -24,15 +24,23 @@ Also, you need a C/C++ compiler and standard libraries available. On Ubuntu it
 would be enough to install `build-essential` package. If you build your project
 using `golang` Docker container, all tools are already installed.
 
-## Usage on older hardware
+## Performance optimization on x86_64 hardware
 
-Older x86_64 processors may lack support for ADX and BMI2 instruction sets used to optimize rapidsnark computations.
-To use this library on such processors on linux use `rapidsnark_noasm` build tag.
+Rapidsnark has optimization for recent x86_64 processors that gives ~2x speed boost, but older hardware may lack support for ADX and BMI2 instruction sets used.
+
+MacOS build has it enabled. But for linux we disabled the optimization (at least for now, because GitHub Actions may use old hardware).
+
+To **enable** optimization on linux use `rapidsnark_asm` build tag:
 
 ```shell
-go build -tags rapidsnark_noasm
-go test -tags rapidsnark_noasm
+go build -tags rapidsnark_asm
+go test -tags rapidsnark_asm
 ```
+
+In the future we may change default behaviour, so to force disable optimizations use `rapidsnark_noasm` build tag.
+
+## Performance optimization on arm64 hardware
+We used NEON instruction set, and it is always enabled, so no build tags are needed.
 
 ## Build using custom RapidSNARK library.
 
