@@ -58,6 +58,8 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 		"exceptionHandler":   getExceptionHandler(store),
 		"showSharedRWMemory": getShowSharedRWMemory(store),
 		"log":                getLog(store),
+		"printErrorMessage":  printErrorMessage(store),
+		"writeBufferMessage": writeBufferMessage(store),
 	})
 
 	instance, err := wasmer.NewInstance(module, importObject)
@@ -157,6 +159,37 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 		readSharedRWMemory:  readSharedRWMemory,
 		writeSharedRWMemory: writeSharedRWMemory,
 	}, nil
+}
+
+func printErrorMessage(store *wasmer.Store) wasmer.IntoExtern {
+	function := wasmer.NewFunction(
+		store,
+		wasmer.NewFunctionType(
+			wasmer.NewValueTypes(),
+			wasmer.NewValueTypes(), // zero results
+		),
+		func(args []wasmer.Value) ([]wasmer.Value, error) {
+			//fmt.Println("writeBufferMessage:", args)
+			return []wasmer.Value{}, nil
+		},
+	)
+	return function
+}
+
+func writeBufferMessage(store *wasmer.Store) wasmer.IntoExtern {
+	function := wasmer.NewFunction(
+		store,
+		wasmer.NewFunctionType(
+			wasmer.NewValueTypes(),
+			wasmer.NewValueTypes(), // zero results
+		),
+		func(args []wasmer.Value) ([]wasmer.Value, error) {
+			//fmt.Println("writeBufferMessage:", args)
+
+			return []wasmer.Value{}, nil
+		},
+	)
+	return function
 }
 
 // CalculateWitness calculates the witness given the inputs.
