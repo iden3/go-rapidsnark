@@ -3,6 +3,7 @@ package witness
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -169,7 +170,6 @@ func printErrorMessage(store *wasmer.Store) wasmer.IntoExtern {
 			wasmer.NewValueTypes(), // zero results
 		),
 		func(args []wasmer.Value) ([]wasmer.Value, error) {
-			//fmt.Println("writeBufferMessage:", args)
 			return []wasmer.Value{}, nil
 		},
 	)
@@ -184,7 +184,6 @@ func writeBufferMessage(store *wasmer.Store) wasmer.IntoExtern {
 			wasmer.NewValueTypes(), // zero results
 		),
 		func(args []wasmer.Value) ([]wasmer.Value, error) {
-			//fmt.Println("writeBufferMessage:", args)
 
 			return []wasmer.Value{}, nil
 		},
@@ -409,7 +408,7 @@ func getExceptionHandler(store *wasmer.Store) wasmer.IntoExtern {
 				} else {
 					errStr = "Unknown error"
 				}
-				fmt.Println(errStr)
+				return nil, errors.New(errStr)
 			}
 			return []wasmer.Value{}, nil
 		},
