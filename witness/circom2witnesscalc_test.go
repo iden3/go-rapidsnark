@@ -1,7 +1,6 @@
 package witness
 
 import (
-	"io/fs"
 	"io/ioutil"
 	"testing"
 
@@ -9,7 +8,6 @@ import (
 )
 
 const defaultFileMode = 0644
-const testWTNS = "/tmp/witness.wtns"
 
 func TestCircom2CalculateWitness(t *testing.T) {
 	wasmBytes, err := ioutil.ReadFile("test_files/circom2/circuit.wasm")
@@ -67,7 +65,7 @@ func TestCircom2CalculateWTNSBin(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, wtnsBytes)
 
-	_ = ioutil.WriteFile("test_files/circom2/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
+	//_ = ioutil.WriteFile("test_files/circom2/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
 }
 
 // TestCircom2CalculateWitness210 tests the calculation of the witness for the circom 2.1.0
