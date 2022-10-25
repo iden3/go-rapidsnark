@@ -3,6 +3,7 @@ package witness
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -13,10 +14,12 @@ import (
 // from signal inputs using the WitnessCalc WASM module.
 type Circom2WitnessCalculator struct {
 	instance            *wasmer.Instance
+	store               *wasmer.Store
 	sanityCheck         bool
 	n32                 int32
 	version             int32
 	witnessSize         int32
+	prime               *big.Int
 	init                wasmer.NativeFunction
 	getFieldNumLen32    wasmer.NativeFunction
 	getInputSignalSize  wasmer.NativeFunction
@@ -27,16 +30,23 @@ type Circom2WitnessCalculator struct {
 	readSharedRWMemory  wasmer.NativeFunction
 	setInputSignal      wasmer.NativeFunction
 	writeSharedRWMemory wasmer.NativeFunction
+	getMessageChar      wasmer.NativeFunction
+	exception           error
+	errStr              bytes.Buffer
+	msgStr              bytes.Buffer
 }
 
 // NewCircom2WitnessCalculator creates a new WitnessCalculator from the WitnessCalc
 // loaded WASM module in the runtime.
 func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2WitnessCalculator, error) {
+	wc := Circom2WitnessCalculator{}
+	wc.sanityCheck = sanityCheck
+
 	engine := wasmer.NewEngine()
-	store := wasmer.NewStore(engine)
+	wc.store = wasmer.NewStore(engine)
 
 	// Compiles the module
-	module, _ := wasmer.NewModule(store, wasmBytes)
+	module, _ := wasmer.NewModule(wc.store, wasmBytes)
 
 	limits, err := wasmer.NewLimits(2000, 100000)
 	if err != nil {
@@ -45,7 +55,7 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 
 	memType := wasmer.NewMemoryType(limits)
 
-	memory := wasmer.NewMemory(store, memType)
+	memory := wasmer.NewMemory(wc.store, memType)
 
 	// Instantiates the module
 	importObject := wasmer.NewImportObject()
@@ -55,18 +65,20 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 	})
 
 	importObject.Register("runtime", map[string]wasmer.IntoExtern{
-		"exceptionHandler":   getExceptionHandler(store),
-		"showSharedRWMemory": getShowSharedRWMemory(store),
-		"log":                getLog(store),
+		"exceptionHandler":   wc.getExceptionHandler(),
+		"showSharedRWMemory": wc.getShowSharedRWMemoryHandler(),
+		"log":                wc.getLogHandler(),
+		"printErrorMessage":  wc.printErrorMessageHandler(),
+		"writeBufferMessage": wc.writeBufferMessageHandler(),
 	})
 
-	instance, err := wasmer.NewInstance(module, importObject)
+	wc.instance, err = wasmer.NewInstance(module, importObject)
 	if err != nil {
 		return nil, err
 	}
 
 	// Gets the `init` exported function from the WebAssembly instance.
-	init, err := instance.Exports.GetFunction("init")
+	init, err := wc.instance.Exports.GetFunction("init")
 	if err != nil {
 		return nil, err
 	}
@@ -78,29 +90,30 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 		return nil, err
 	}
 
-	getFieldNumLen32, err := instance.Exports.GetFunction("getFieldNumLen32")
+	getFieldNumLen32, err := wc.instance.Exports.GetFunction("getFieldNumLen32")
 	if err != nil {
 		return nil, err
 	}
-	n32, err := getFieldNumLen32()
+	n32raw, err := getFieldNumLen32()
 	if err != nil {
 		return nil, err
 	}
+	wc.n32 = n32raw.(int32)
 
 	// this function is missing in wasm files generated with circom version prior to v2.0.4
-	getInputSignalSize, _ := instance.Exports.GetFunction("getInputSignalSize")
+	getInputSignalSize, _ := wc.instance.Exports.GetFunction("getInputSignalSize")
 
-	getInputSize, err := instance.Exports.GetFunction("getInputSize")
+	getInputSize, err := wc.instance.Exports.GetFunction("getInputSize")
 	if err != nil {
 		return nil, err
 	}
 
-	getRawPrime, err := instance.Exports.GetFunction("getRawPrime")
+	getRawPrime, err := wc.instance.Exports.GetFunction("getRawPrime")
 	if err != nil {
 		return nil, err
 	}
 
-	getVersion, err := instance.Exports.GetFunction("getVersion")
+	getVersion, err := wc.instance.Exports.GetFunction("getVersion")
 	if err != nil {
 		return nil, err
 	}
@@ -110,12 +123,12 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 		return nil, err
 	}
 
-	getWitness, err := instance.Exports.GetFunction("getWitness")
+	getWitness, err := wc.instance.Exports.GetFunction("getWitness")
 	if err != nil {
 		return nil, err
 	}
 
-	getWitnessSize, err := instance.Exports.GetFunction("getWitnessSize")
+	getWitnessSize, err := wc.instance.Exports.GetFunction("getWitnessSize")
 	if err != nil {
 		return nil, err
 	}
@@ -125,38 +138,57 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 		return nil, err
 	}
 
-	setInputSignal, err := instance.Exports.GetFunction("setInputSignal")
+	setInputSignal, err := wc.instance.Exports.GetFunction("setInputSignal")
 	if err != nil {
 		return nil, err
 	}
 
-	readSharedRWMemory, err := instance.Exports.GetFunction("readSharedRWMemory")
+	readSharedRWMemory, err := wc.instance.Exports.GetFunction("readSharedRWMemory")
 	if err != nil {
 		return nil, err
 	}
 
-	writeSharedRWMemory, err := instance.Exports.GetFunction("writeSharedRWMemory")
+	writeSharedRWMemory, err := wc.instance.Exports.GetFunction("writeSharedRWMemory")
 	if err != nil {
 		return nil, err
 	}
 
-	return &Circom2WitnessCalculator{
-		instance:            instance,
-		sanityCheck:         sanityCheck,
-		n32:                 n32.(int32),
-		version:             version.(int32),
-		witnessSize:         witnessSize.(int32),
-		init:                init,
-		getFieldNumLen32:    getFieldNumLen32,
-		getInputSignalSize:  getInputSignalSize,
-		getInputSize:        getInputSize,
-		getRawPrime:         getRawPrime,
-		getWitness:          getWitness,
-		getVersion:          getVersion,
-		setInputSignal:      setInputSignal,
-		readSharedRWMemory:  readSharedRWMemory,
-		writeSharedRWMemory: writeSharedRWMemory,
-	}, nil
+	getMessageChar, err := wc.instance.Exports.GetFunction("getMessageChar")
+	if err != nil {
+		return nil, err
+	}
+
+	//get prime number
+	_, err = getRawPrime()
+	if err != nil {
+		return nil, err
+	}
+	primeArr := make([]uint32, wc.n32)
+	for j := 0; j < int(wc.n32); j++ {
+		val, err := readSharedRWMemory(int32(j))
+		if err != nil {
+			return nil, err
+		}
+		primeArr[int(wc.n32)-1-j] = uint32(val.(int32))
+	}
+	prime := fromArray32(primeArr)
+
+	wc.version = version.(int32)
+	wc.witnessSize = witnessSize.(int32)
+	wc.prime = prime
+	wc.init = init
+	wc.getFieldNumLen32 = getFieldNumLen32
+	wc.getInputSignalSize = getInputSignalSize
+	wc.getInputSize = getInputSize
+	wc.getRawPrime = getRawPrime
+	wc.getWitness = getWitness
+	wc.getVersion = getVersion
+	wc.setInputSignal = setInputSignal
+	wc.readSharedRWMemory = readSharedRWMemory
+	wc.writeSharedRWMemory = writeSharedRWMemory
+	wc.getMessageChar = getMessageChar
+
+	return &wc, nil
 }
 
 // CalculateWitness calculates the witness given the inputs.
@@ -292,16 +324,28 @@ func (wc *Circom2WitnessCalculator) CalculateWTNSBin(inputs map[string]interface
 }
 
 // CalculateWitness calculates the witness given the inputs.
-func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interface{}, sanityCheck bool) error {
+func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interface{}, sanityCheck bool) (funcErr error) {
 	//input is assumed to be a map from signals to arrays of bigInts
 	sanityCheckVal := int32(0)
 	if sanityCheck {
 		sanityCheckVal = 1
 	}
+
+	wc.exception = nil
+	wc.errStr.Reset()
+	wc.msgStr.Reset()
+
 	_, err := wc.init(sanityCheckVal)
 	if err != nil {
 		return err
 	}
+
+	// overwrite return error if there was an exception during execution
+	defer func() {
+		if wc.exception != nil {
+			funcErr = wc.exception
+		}
+	}()
 
 	inputCounter := 0
 	for inputName, inputValue := range inputs {
@@ -326,7 +370,11 @@ func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interfa
 		}
 
 		for i := 0; i < len(fSlice); i++ {
-			arrFr, err := toArray32(fSlice[i], int(wc.n32))
+			// doing val = (val + prime) % prime
+			val := new(big.Int)
+			val = val.Add(fSlice[i], wc.prime)
+			val = val.Mod(val, wc.prime)
+			arrFr, err := toArray32(val, int(wc.n32))
 			if err != nil {
 				return err
 			}
@@ -350,9 +398,9 @@ func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interfa
 	return nil
 }
 
-func getExceptionHandler(store *wasmer.Store) wasmer.IntoExtern {
+func (wc *Circom2WitnessCalculator) getExceptionHandler() wasmer.IntoExtern {
 	function := wasmer.NewFunction(
-		store,
+		wc.store,
 		wasmer.NewFunctionType(
 			wasmer.NewValueTypes(wasmer.I32), // one i32 argument
 			wasmer.NewValueTypes(),           // zero results
@@ -362,21 +410,29 @@ func getExceptionHandler(store *wasmer.Store) wasmer.IntoExtern {
 				code := args[0].I32()
 				var errStr string
 				if code == 1 {
-					errStr = "Signal not found. "
+					errStr = "Signal not found"
 				} else if code == 2 {
-					errStr = "Too many signals set. "
+					errStr = "Too many signals set"
 				} else if code == 3 {
-					errStr = "Signal already set. "
+					errStr = "Signal already set"
 				} else if code == 4 {
-					errStr = "Assert Failed. "
+					errStr = "Assert Failed"
 				} else if code == 5 {
-					errStr = "Not enough memory. "
+					errStr = "Not enough memory"
 				} else if code == 6 {
 					errStr = "Input signal array access exceeds the size"
 				} else {
 					errStr = "Unknown error"
 				}
-				fmt.Println(errStr)
+				// Append stack trace to error message
+				if wc.errStr.Len() > 0 {
+					errStr += ".\n" + wc.errStr.String()
+				}
+				// returning error here crashes wasmer for all following witness calculation calls,
+				// so we have to use a field to pass exception to the outside world
+				wc.exception = errors.New(errStr)
+				//fmt.Println(errStr)
+				//return nil, errors.New(errStr)
 			}
 			return []wasmer.Value{}, nil
 		},
@@ -384,9 +440,38 @@ func getExceptionHandler(store *wasmer.Store) wasmer.IntoExtern {
 	return function
 }
 
-func getShowSharedRWMemory(store *wasmer.Store) wasmer.IntoExtern {
+func (wc *Circom2WitnessCalculator) getShowSharedRWMemoryHandler() wasmer.IntoExtern {
 	function := wasmer.NewFunction(
-		store,
+		wc.store,
+		wasmer.NewFunctionType(
+			wasmer.NewValueTypes(),
+			wasmer.NewValueTypes(),
+		),
+		func(args []wasmer.Value) ([]wasmer.Value, error) {
+			arr := make([]uint32, wc.n32)
+			for j := 0; j < int(wc.n32); j++ {
+				val, err := wc.readSharedRWMemory(int32(j))
+				if err != nil {
+					return nil, err
+				}
+				arr[int(wc.n32)-1-j] = uint32(val.(int32))
+			}
+
+			// If we've buffered other content, put a space in between the items
+			if wc.msgStr.Len() > 0 {
+				wc.msgStr.WriteString(" ")
+			}
+			// Then append the value to the message we are creating
+			wc.msgStr.WriteString(fromArray32(arr).String())
+			return []wasmer.Value{}, nil
+		},
+	)
+	return function
+}
+
+func (wc *Circom2WitnessCalculator) getLogHandler() wasmer.IntoExtern {
+	function := wasmer.NewFunction(
+		wc.store,
 		wasmer.NewFunctionType(
 			wasmer.NewValueTypes(),
 			wasmer.NewValueTypes(),
@@ -398,14 +483,59 @@ func getShowSharedRWMemory(store *wasmer.Store) wasmer.IntoExtern {
 	return function
 }
 
-func getLog(store *wasmer.Store) wasmer.IntoExtern {
+func (wc *Circom2WitnessCalculator) getMessage() (string, error) {
+	message := ""
+	c, err := wc.getMessageChar()
+	if err != nil {
+		return "", err
+	}
+	for c.(int32) != 0 {
+		message += string(c.(int32))
+		c, err = wc.getMessageChar()
+		if err != nil {
+			return message, err
+		}
+	}
+	return message, nil
+}
+
+func (wc *Circom2WitnessCalculator) printErrorMessageHandler() wasmer.IntoExtern {
 	function := wasmer.NewFunction(
-		store,
+		wc.store,
 		wasmer.NewFunctionType(
 			wasmer.NewValueTypes(),
-			wasmer.NewValueTypes(),
+			wasmer.NewValueTypes(), // zero results
 		),
 		func(args []wasmer.Value) ([]wasmer.Value, error) {
+			message, _ := wc.getMessage()
+			wc.errStr.WriteString(message + "\n")
+			return []wasmer.Value{}, nil
+		},
+	)
+	return function
+}
+
+func (wc *Circom2WitnessCalculator) writeBufferMessageHandler() wasmer.IntoExtern {
+	function := wasmer.NewFunction(
+		wc.store,
+		wasmer.NewFunctionType(
+			wasmer.NewValueTypes(),
+			wasmer.NewValueTypes(), // zero results
+		),
+		func(args []wasmer.Value) ([]wasmer.Value, error) {
+			msg, _ := wc.getMessage()
+			// Any calls to `log()` will always end with a `\n`, so that's when we print and reset
+			if msg == "\n" {
+				fmt.Println(wc.msgStr.String())
+				wc.msgStr.Reset()
+			} else {
+				// If we've buffered other content, put a space in between the items
+				if wc.msgStr.Len() > 0 {
+					wc.msgStr.WriteString(" ")
+				}
+				// Then append the message to the message we are creating
+				wc.msgStr.WriteString(msg)
+			}
 			return []wasmer.Value{}, nil
 		},
 	)
