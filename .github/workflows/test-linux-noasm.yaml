@@ -24,6 +24,8 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Print CPU Info
+        run: cat /proc/cpuinfo
       - name: Run tests
         # rapidsnark_noasm build tag is needed for older GitHub Action runners
         run: cd tests && go test -tags rapidsnark_noasm -v -covermode=count
