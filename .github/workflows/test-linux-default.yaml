@@ -19,9 +19,10 @@ jobs:
     steps:
       - name: Install Go
         if: success()
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+          cache: false
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Print CPU Info
