@@ -3,8 +3,8 @@ module github.com/iden3/go-rapidsnark/tests
 go 1.18
 
 require (
-	github.com/iden3/go-rapidsnark/prover v0.0.5
-	github.com/iden3/go-rapidsnark/verifier v0.0.2
+	github.com/iden3/go-rapidsnark/prover v0.0.6
+	github.com/iden3/go-rapidsnark/verifier v0.0.3
 	github.com/stretchr/testify v1.8.0
 )
 
@@ -21,4 +21,5 @@ require (
 replace (
 	github.com/iden3/go-rapidsnark/prover => ../prover
 	github.com/iden3/go-rapidsnark/verifier => ../verifier
+	github.com/iden3/go-rapidsnark/types => ../types
 )
