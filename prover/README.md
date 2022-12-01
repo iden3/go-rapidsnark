@@ -1,28 +1,29 @@
-# go-rapidsnark
+# go-rapidsnark prover
 
 A go wrapper for the RapidSNARK C++ library.
 
 To use this module you either need to have RapidSNARK library available on
 your build host or have one of the supported architectures to use vendored
-pre-built library for convenience use.
+pre-built libraries for convenience.
+
+## Dependencies
+* C/C++ compiler and standard libraries available
+* glibc version >= 2.31
+* OpenMP
+
+On Ubuntu it would be enough to install `build-essential` and `libomp-dev` packages.
+
+If you build your project using `golang` Docker container, all tools are already installed.
+
+To run compiled project on Alpine linux you would need to install there `libstdc++`, `gcompat` and `libgomp` packages.
 
 ## Build using pre-built vendored RapidSNARK library.
 
-For few architectures, pre-built vendored libraries are included. And just use
-this module without any externally built dependencies except standard C/C++
-libraries.
-
-Supported architectures are:
+For the following architectures, pre-built vendored libraries are included:
 * MacOS x86_64
 * MacOS ARM64 Apple Silicon
 * Linux x86_64
 * Linux ARM64 v8
-
-Minimum glibc version that should be available on build host is 2.31.
-
-Also, you need a C/C++ compiler and standard libraries available. On Ubuntu it
-would be enough to install `build-essential` package. If you build your project
-using `golang` Docker container, all tools are already installed.
 
 ## Performance optimization on x86_64 hardware
 
