@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/wasmerio/wasmer-go/wasmer"
+	"github.com/iden3/wasmer-go/wasmer"
 )
 
 // Circom2WitnessCalculator is the object that allows performing witness calculation
 // from signal inputs using the WitnessCalc WASM module.
 type Circom2WitnessCalculator struct {
+	engine              *wasmer.Engine
+	module              *wasmer.Module
 	instance            *wasmer.Instance
 	store               *wasmer.Store
 	sanityCheck         bool
@@ -42,11 +44,16 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 	wc := Circom2WitnessCalculator{}
 	wc.sanityCheck = sanityCheck
 
-	engine := wasmer.NewEngine()
-	wc.store = wasmer.NewStore(engine)
+	wc.engine = wasmer.NewEngine()
+	wc.store = wasmer.NewStore(wc.engine)
+
+	var err error
 
 	// Compiles the module
-	module, _ := wasmer.NewModule(wc.store, wasmBytes)
+	wc.module, err = wasmer.NewModule(wc.store, wasmBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	limits, err := wasmer.NewLimits(2000, 100000)
 	if err != nil {
@@ -72,7 +79,7 @@ func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2Wi
 		"writeBufferMessage": wc.writeBufferMessageHandler(),
 	})
 
-	wc.instance, err = wasmer.NewInstance(module, importObject)
+	wc.instance, err = wasmer.NewInstance(wc.module, importObject)
 	if err != nil {
 		return nil, err
 	}
@@ -540,6 +547,12 @@ func (wc *Circom2WitnessCalculator) writeBufferMessageHandler() wasmer.IntoExter
 		},
 	)
 	return function
+}
+
+func (wc *Circom2WitnessCalculator) Close() {
+	wc.store.Close()
+	wc.instance.Close()
+	wc.module.Close()
 }
 
 func toArray32(s *big.Int, size int) ([]uint32, error) {
