@@ -91,3 +91,11 @@ func fnvHash(s string) (int32, int32) {
 	h := hash.Sum64()
 	return int32(h >> 32), int32(h & 0xffffffff)
 }
+
+// fnvHash returns the 64 bit FNV-1a hash split into two 32 bit values: (MSB, LSB)
+func fnvHashUint(s string) (uint32, uint32) {
+	hash := fnv.New64a()
+	hash.Write([]byte(s))
+	h := hash.Sum64()
+	return uint32(h >> 32), uint32(h & 0xffffffff)
+}
