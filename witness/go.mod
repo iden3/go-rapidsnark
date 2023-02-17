@@ -3,7 +3,7 @@ module github.com/iden3/go-rapidsnark/witness
 go 1.18
 
 require (
-	github.com/iden3/wasmer-go v0.0.0-20230124010028-f5f3b83d6e4a
+	github.com/iden3/wasmer-go v0.0.0-20230217163329-62d85068ec47
 	github.com/stretchr/testify v1.7.1
 )
 
