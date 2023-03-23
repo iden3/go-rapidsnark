@@ -52,21 +52,48 @@ func Groth16ProverRaw(zkey []byte,
 
 	proofBufSize := bufferSize
 	publicBufSize := bufferSize
-	var proofBuffer = make([]byte, proofBufSize)
-	var publicBuffer = make([]byte, publicBufSize)
 
 	const errorBufSize = 4096
-	var errorMessage [errorBufSize]byte
+	errorMessage := make([]byte, errorBufSize)
+
+	zkeyPointer := C.CBytes(zkey)
+	wtnsPointer := C.CBytes(witness)
+
+	errorMessagePointer := C.CString(string(errorMessage))
+
+	defer func() {
+		C.free(zkeyPointer)
+		C.free(wtnsPointer)
+		C.free(unsafe.Pointer(errorMessagePointer))
+	}()
 
 	for {
-		r := C.groth16_prover(
-			unsafe.Pointer(&zkey[0]), C.ulong(len(zkey)),
-			unsafe.Pointer(&witness[0]), C.ulong(len(witness)),
-			(*C.char)(unsafe.Pointer(&proofBuffer[0])), (*C.ulong)(unsafe.Pointer(&proofBufSize)),
-			(*C.char)(unsafe.Pointer(&publicBuffer[0])), (*C.ulong)(unsafe.Pointer(&publicBufSize)),
-			(*C.char)(unsafe.Pointer(&errorMessage[0])), errorBufSize)
+		var proofBuffer = make([]byte, proofBufSize)
+		var publicBuffer = make([]byte, publicBufSize)
 
-		if r != 0 {
+		//proofBufferPointer := unsafe.Pointer(&proofBuffer[0])
+		proofBufferPointer := C.CString(string(proofBuffer))
+		proofBufSizePointer := unsafe.Pointer(&proofBufSize)
+		publicBufferPointer := C.CString(string(publicBuffer))
+		publicBufSizePointer := unsafe.Pointer(&publicBufSize)
+
+		defer func() {
+			C.free(unsafe.Pointer(proofBufferPointer))
+			C.free(unsafe.Pointer(publicBufferPointer))
+		}()
+
+		r := C.groth16_prover(
+			zkeyPointer, C.ulong(len(zkey)),
+			wtnsPointer, C.ulong(len(witness)),
+			proofBufferPointer, (*C.ulong)(proofBufSizePointer),
+			publicBufferPointer, (*C.ulong)(publicBufSizePointer),
+			errorMessagePointer, errorBufSize)
+
+		proofBuffer = []byte(C.GoString(proofBufferPointer))
+		publicBuffer = []byte(C.GoString(publicBufferPointer))
+		errorMessage = []byte(C.GoString(errorMessagePointer))
+
+		if r != 0 && r != 2 {
 			idx := bytes.IndexByte(errorMessage[:], 0)
 			if idx == -1 {
 				idx = len(errorMessage)
@@ -79,8 +106,7 @@ func Groth16ProverRaw(zkey []byte,
 		// if true, enlarge buffers and repeat.
 		repeat := false
 
-		idx := bytes.IndexByte(proofBuffer[:], 0)
-		if idx == -1 {
+		if len(proofBuffer) == 0 {
 			if proofBufSize >= MaxBufferSize {
 				return "", "", errors.New("proof is too large")
 			}
@@ -88,14 +114,12 @@ func Groth16ProverRaw(zkey []byte,
 			if proofBufSize >= MaxBufferSize {
 				proofBufSize = MaxBufferSize
 			}
-			proofBuffer = make([]byte, proofBufSize)
 			repeat = true
 		} else {
-			proof = string(proofBuffer[:idx])
+			proof = string(proofBuffer)
 		}
 
-		idx = bytes.IndexByte(publicBuffer[:], 0)
-		if idx == -1 {
+		if len(publicBuffer) == 0 {
 			if publicBufSize >= MaxBufferSize {
 				return "", "", errors.New("public inputs is too large")
 			}
@@ -103,10 +127,9 @@ func Groth16ProverRaw(zkey []byte,
 			if publicBufSize >= MaxBufferSize {
 				publicBufSize = MaxBufferSize
 			}
-			publicBuffer = make([]byte, publicBufSize)
 			repeat = true
 		} else {
-			publicInputs = string(publicBuffer[:idx])
+			publicInputs = string(publicBuffer)
 		}
 
 		if repeat {
