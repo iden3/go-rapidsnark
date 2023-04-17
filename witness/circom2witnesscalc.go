@@ -399,8 +399,12 @@ func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interfa
 		}
 	}
 	inputSize, err := wc.getInputSize()
+	if err != nil {
+		return err
+	}
 	if inputCounter < int(inputSize.(int32)) {
-		return fmt.Errorf("not all inputs have been set: only %d out of %d", inputCounter, inputSize)
+		return fmt.Errorf("not all inputs have been set: only %d out of %d",
+			inputCounter, inputSize)
 	}
 	return nil
 }

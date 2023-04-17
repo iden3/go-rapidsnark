@@ -8,15 +8,6 @@ import (
 	"reflect"
 )
 
-// swap the order of the bytes in a slice.  This allows flipping the endianness.
-func swap(b []byte) []byte {
-	bs := make([]byte, len(b))
-	for i := 0; i < len(b); i++ {
-		bs[len(b)-1-i] = b[i]
-	}
-	return bs
-}
-
 // parseInput is a recurisve helper function for ParseInputs
 func parseInput(v interface{}) (interface{}, error) {
 	rv := reflect.ValueOf(v)

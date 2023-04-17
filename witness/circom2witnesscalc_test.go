@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const defaultFileMode = 0644
-
 func TestCircom2CalculateWitness(t *testing.T) {
 	wasmBytes, err := ioutil.ReadFile("test_files/circom2/circuit.wasm")
 	require.NoError(t, err)

@@ -94,26 +94,6 @@ func TestWZCircom2CalculateWitness210(t *testing.T) {
 	require.Equal(t, "c0a2b43f5a333310c2bb8d357db46d3b", hashInts(witness))
 }
 
-func hashInts(in []*big.Int) string {
-	h := md5.New()
-	for _, i := range in {
-		h.Write(i.Bytes())
-	}
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-func hashBytes(in []byte) string {
-	h := md5.New()
-	n, err := h.Write(in)
-	if err != nil {
-		panic(err)
-	}
-	if n != len(in) {
-		panic("incorrect size")
-	}
-	return hex.EncodeToString(h.Sum(nil))
-}
-
 // TestWZCircom2CalculateBinWitness210 tests the calculation of the witness
 // for the circom 2.1.0
 func TestWZCircom2CalculateBinWitness210(t *testing.T) {
@@ -186,4 +166,24 @@ func TestWZCircom2CalculateWTNSBin210_Error(t *testing.T) {
 Error in template ForceEqualIfEnabled_234 line: 56
 Error in template SMTVerifier_235 line: 134
 Error in template AuthV2_347 line: 93`)
+}
+
+func hashInts(in []*big.Int) string {
+	h := md5.New()
+	for _, i := range in {
+		h.Write(i.Bytes())
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func hashBytes(in []byte) string {
+	h := md5.New()
+	n, err := h.Write(in)
+	if err != nil {
+		panic(err)
+	}
+	if n != len(in) {
+		panic("incorrect size")
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }

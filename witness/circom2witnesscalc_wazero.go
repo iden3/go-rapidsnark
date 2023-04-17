@@ -241,8 +241,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateWTNSBin(inputs map[string]interfa
 	_ = binary.Write(buff, binary.LittleEndian, uint32(n8))
 
 	//prime number
-	getRawPrime := instance.ExportedFunction("getRawPrime")
-	wResult, err = getRawPrime.Call(ctx)
+	_, err = instance.ExportedFunction("getRawPrime").Call(ctx)
 	if err != nil {
 		return nil, err
 	}
