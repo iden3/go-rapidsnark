@@ -3,10 +3,11 @@ package verifier
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto/bn256"
+	"math/big"
+
 	"github.com/iden3/go-iden3-crypto/constants"
 	"github.com/iden3/go-rapidsnark/types"
-	"math/big"
+	"github.com/iden3/go-rapidsnark/verifier/bn256"
 )
 
 // VerifyGroth16 performs a verification of zkp  based on verification key and public inputs

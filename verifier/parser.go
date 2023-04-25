@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto/bn256"
-	"github.com/iden3/go-rapidsnark/types"
-
 	"math/big"
 	"strings"
+
+	"github.com/iden3/go-rapidsnark/types"
+	"github.com/iden3/go-rapidsnark/verifier/bn256"
 )
 
 // proofPairingData describes three components of zkp proof in bn256 format.
