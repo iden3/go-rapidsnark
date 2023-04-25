@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ethereum/go-ethereum v1.11.6
-	github.com/iden3/go-iden3-crypto v0.0.14
+	github.com/iden3/go-iden3-crypto v0.0.15
 	github.com/iden3/go-rapidsnark/types v0.0.2
 )
 

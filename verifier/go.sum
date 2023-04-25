@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/ethereum/go-ethereum v1.11.6 h1:2VF8Mf7XiSUfmoNOy3D+ocfl9Qu8baQBrCNbo2CXQ8E=
 github.com/ethereum/go-ethereum v1.11.6/go.mod h1:+a8pUj1tOyJ2RinsNQD4326YS+leSoKGiG/uVVb0x6Y=
-github.com/iden3/go-iden3-crypto v0.0.14 h1:HQnFchY735JRNQxof6n/Vbyon4owj4+Ku+LNAamWV6c=
-github.com/iden3/go-iden3-crypto v0.0.14/go.mod h1:dLpM4vEPJ3nDHzhWFXDjzkn1qHoBeOT/3UEhXsEsP3E=
+github.com/iden3/go-iden3-crypto v0.0.15 h1:4MJYlrot1l31Fzlo2sF56u7EVFeHHJkxGXXZCtESgK4=
+github.com/iden3/go-iden3-crypto v0.0.15/go.mod h1:dLpM4vEPJ3nDHzhWFXDjzkn1qHoBeOT/3UEhXsEsP3E=
 github.com/iden3/go-rapidsnark/types v0.0.2 h1:CjJSrlbWchHzuMRdxSYrEh7n/akP+Z2PLNbwT5yBmQY=
 github.com/iden3/go-rapidsnark/types v0.0.2/go.mod h1:ApgcaUxKIgSRA6fAeFxK7p+lgXXfG4oA2HN5DhFlfF4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
