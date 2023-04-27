@@ -23,7 +23,7 @@ type Circom2WZWitnessCalculator struct {
 }
 
 func NewCircom2WZWitnessCalculator(
-	wasmBytes []byte) (*Circom2WZWitnessCalculator, error) {
+	wasmBytes []byte) (WitnessCalculator, error) {
 
 	runtime := wazero.NewRuntime(context.Background())
 
@@ -105,7 +105,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateWitness(inputs map[string]interfa
 		return nil, err
 	}
 
-	err = wc.doCalculateWitness(ctx, instance, wCtx, inputs, sanityCheck)
+	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateBinWitness(inputs map[string]inte
 		return nil, err
 	}
 
-	err = wc.doCalculateWitness(ctx, instance, wCtx, inputs, sanityCheck)
+	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateWTNSBin(inputs map[string]interfa
 		return nil, err
 	}
 
-	err = wc.doCalculateWitness(ctx, instance, wCtx, inputs, sanityCheck)
+	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -285,10 +285,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateWTNSBin(inputs map[string]interfa
 }
 
 func (w *Circom2WZWitnessCalculator) doCalculateWitness(ctx context.Context,
-	instance api.Module,
-	wCtx witnessCtx,
-	inputs map[string]any,
-	sanityCheck bool) (err error) {
+	wCtx witnessCtx, inputs map[string]any, sanityCheck bool) (err error) {
 
 	if err = wCtx.init(ctx, sanityCheck); err != nil {
 		return err

@@ -40,7 +40,7 @@ type Circom2WitnessCalculator struct {
 // NewCircom2WitnessCalculator creates a new WitnessCalculator from the WitnessCalc
 // loaded WASM module in the runtime.
 func NewCircom2WitnessCalculator(
-	wasmBytes []byte) (*Circom2WitnessCalculator, error) {
+	wasmBytes []byte) (WitnessCalculator, error) {
 
 	wc := Circom2WitnessCalculator{}
 
