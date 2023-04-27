@@ -17,7 +17,6 @@ type Circom2WitnessCalculator struct {
 	module              *wasmer.Module
 	instance            *wasmer.Instance
 	store               *wasmer.Store
-	sanityCheck         bool
 	n32                 int32
 	version             int32
 	witnessSize         int32
@@ -40,9 +39,10 @@ type Circom2WitnessCalculator struct {
 
 // NewCircom2WitnessCalculator creates a new WitnessCalculator from the WitnessCalc
 // loaded WASM module in the runtime.
-func NewCircom2WitnessCalculator(wasmBytes []byte, sanityCheck bool) (*Circom2WitnessCalculator, error) {
+func NewCircom2WitnessCalculator(
+	wasmBytes []byte) (*Circom2WitnessCalculator, error) {
+
 	wc := Circom2WitnessCalculator{}
-	wc.sanityCheck = sanityCheck
 
 	wc.engine = wasmer.NewEngine()
 	wc.store = wasmer.NewStore(wc.engine)
