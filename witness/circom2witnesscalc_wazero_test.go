@@ -11,10 +11,10 @@ import (
 )
 
 func TestWZCircom2CalculateWitness(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
@@ -31,10 +31,10 @@ func TestWZCircom2CalculateWitness(t *testing.T) {
 }
 
 func TestWZCircom2CalculateBinWitness(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
@@ -52,10 +52,10 @@ func TestWZCircom2CalculateBinWitness(t *testing.T) {
 }
 
 func TestWZCircom2CalculateWTNSBin(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
@@ -75,10 +75,10 @@ func TestWZCircom2CalculateWTNSBin(t *testing.T) {
 
 // TestWZCircom2CalculateWitness210 tests the calculation of the witness for the circom 2.1.0
 func TestWZCircom2CalculateWitness210(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
@@ -97,10 +97,10 @@ func TestWZCircom2CalculateWitness210(t *testing.T) {
 // TestWZCircom2CalculateBinWitness210 tests the calculation of the witness
 // for the circom 2.1.0
 func TestWZCircom2CalculateBinWitness210(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
@@ -120,10 +120,10 @@ func TestWZCircom2CalculateBinWitness210(t *testing.T) {
 // TestWZCircom2CalculateWTNSBin210 tests the calculation of the witness
 // for the circom 2.1.0
 func TestWZCircom2CalculateWTNSBin210(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
@@ -143,10 +143,10 @@ func TestWZCircom2CalculateWTNSBin210(t *testing.T) {
 // TestWZCircom2CalculateWTNSBin210 tests the calculation of the witness
 // for the circom 2.1.0
 func TestWZCircom2CalculateWTNSBin210_Error(t *testing.T) {
-	wasmBytes, err := os.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := os.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WZWitnessCalculator(wasmBytes)
