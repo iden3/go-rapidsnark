@@ -1,7 +1,7 @@
 package witness
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,10 +10,10 @@ import (
 const defaultFileMode = 0644
 
 func TestCircom2CalculateWitness(t *testing.T) {
-	wasmBytes, err := ioutil.ReadFile("test_files/circom2/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := ioutil.ReadFile("test_files/circom2/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WitnessCalculator(wasmBytes, true)
@@ -29,10 +29,10 @@ func TestCircom2CalculateWitness(t *testing.T) {
 }
 
 func TestCircom2CalculateBinWitness(t *testing.T) {
-	wasmBytes, err := ioutil.ReadFile("test_files/circom2/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := ioutil.ReadFile("test_files/circom2/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WitnessCalculator(wasmBytes, true)
@@ -48,10 +48,10 @@ func TestCircom2CalculateBinWitness(t *testing.T) {
 }
 
 func TestCircom2CalculateWTNSBin(t *testing.T) {
-	wasmBytes, err := ioutil.ReadFile("test_files/circom2/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := ioutil.ReadFile("test_files/circom2/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WitnessCalculator(wasmBytes, true)
@@ -65,15 +65,15 @@ func TestCircom2CalculateWTNSBin(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, wtnsBytes)
 
-	//_ = ioutil.WriteFile("test_files/circom2/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
+	//_ = os.WriteFile("testdata/circom2/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
 }
 
 // TestCircom2CalculateWitness210 tests the calculation of the witness for the circom 2.1.0
 func TestCircom2CalculateWitness210(t *testing.T) {
-	wasmBytes, err := ioutil.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := ioutil.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WitnessCalculator(wasmBytes, true)
@@ -90,10 +90,10 @@ func TestCircom2CalculateWitness210(t *testing.T) {
 
 // TestCircom2CalculateBinWitness210 tests the calculation of the witness for the circom 2.1.0
 func TestCircom2CalculateBinWitness210(t *testing.T) {
-	wasmBytes, err := ioutil.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := ioutil.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WitnessCalculator(wasmBytes, true)
@@ -110,10 +110,10 @@ func TestCircom2CalculateBinWitness210(t *testing.T) {
 
 // TestCircom2CalculateWTNSBin210 tests the calculation of the witness for the circom 2.1.0
 func TestCircom2CalculateWTNSBin210(t *testing.T) {
-	wasmBytes, err := ioutil.ReadFile("test_files/circom2_1_0/circuit.wasm")
+	wasmBytes, err := os.ReadFile("testdata/circom2_1_0/circuit.wasm")
 	require.NoError(t, err)
 
-	inputBytes, err := ioutil.ReadFile("test_files/circom2_1_0/input.json")
+	inputBytes, err := os.ReadFile("testdata/circom2_1_0/input.json")
 	require.NoError(t, err)
 
 	calc, err := NewCircom2WitnessCalculator(wasmBytes, true)
@@ -127,5 +127,5 @@ func TestCircom2CalculateWTNSBin210(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, wtnsBytes)
 
-	//_ = ioutil.WriteFile("test_files/circom2_1_0/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
+	//_ = os.WriteFile("testdata/circom2_1_0/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
 }
