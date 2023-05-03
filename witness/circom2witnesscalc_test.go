@@ -63,7 +63,7 @@ func TestCircom2CalculateWTNSBin(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, wtnsBytes)
 
-	//_ = ioutil.WriteFile("testdata/circom2/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
+	//_ = os.WriteFile("testdata/circom2/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
 }
 
 // TestCircom2CalculateWitness210 tests the calculation of the witness for the circom 2.1.0
@@ -125,5 +125,5 @@ func TestCircom2CalculateWTNSBin210(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, wtnsBytes)
 
-	//_ = ioutil.WriteFile("testdata/circom2_1_0/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
+	//_ = os.WriteFile("testdata/circom2_1_0/witness.wtns", wtnsBytes, fs.FileMode(defaultFileMode))
 }
