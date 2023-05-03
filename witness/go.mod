@@ -6,7 +6,7 @@ require (
 	github.com/iden3/go-iden3-crypto v0.0.14
 	github.com/iden3/wasmer-go v0.0.0-20230217163329-62d85068ec47
 	github.com/stretchr/testify v1.8.2
-	github.com/tetratelabs/wazero v1.0.1
+	github.com/tetratelabs/wazero v1.1.0
 )
 
 require (
