@@ -1,4 +1,4 @@
-package witness
+package wazero
 
 import (
 	"bytes"
@@ -6,26 +6,27 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"math"
 	"math/big"
 	"strings"
 
 	"github.com/iden3/go-iden3-crypto/constants"
-	"github.com/tetratelabs/wazero"
+	wz "github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 )
 
 type Circom2WZWitnessCalculator struct {
-	runtime        wazero.Runtime
+	runtime        wz.Runtime
 	modRuntime     api.Module
-	compiledModule wazero.CompiledModule
+	compiledModule wz.CompiledModule
 }
 
 func NewCircom2WZWitnessCalculator(
-	wasmBytes []byte) (WitnessCalculator, error) {
+	wasmBytes []byte) (*Circom2WZWitnessCalculator, error) {
 
-	runtime := wazero.NewRuntime(context.Background())
+	runtime := wz.NewRuntime(context.Background())
 
 	ctx := context.Background()
 	modRuntime, err := runtime.NewHostModuleBuilder("runtime").
@@ -91,7 +92,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateWitness(inputs map[string]interfa
 	wCtxState := &witnessCtxState{}
 	ctx := withWtnsCtx(context.Background(), wCtxState)
 
-	cfg := wazero.NewModuleConfig()
+	cfg := wz.NewModuleConfig()
 	var instance api.Module
 	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
 	if err != nil {
@@ -139,7 +140,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateBinWitness(inputs map[string]inte
 	wCtxState := &witnessCtxState{}
 	ctx := withWtnsCtx(context.Background(), wCtxState)
 
-	cfg := wazero.NewModuleConfig()
+	cfg := wz.NewModuleConfig()
 	var instance api.Module
 	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
 	if err != nil {
@@ -186,7 +187,7 @@ func (wc *Circom2WZWitnessCalculator) CalculateWTNSBin(inputs map[string]interfa
 	wCtxState := &witnessCtxState{}
 	ctx := withWtnsCtx(context.Background(), wCtxState)
 
-	cfg := wazero.NewModuleConfig()
+	cfg := wz.NewModuleConfig()
 	var instance api.Module
 	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
 	if err != nil {
@@ -636,4 +637,22 @@ func printSharedRWMemory(ctx context.Context, m api.Module) {
 	}
 
 	wtnsCtx.msgStrs = append(wtnsCtx.msgStrs, fromArray32(arr).Text(10))
+}
+
+func fromArray32(arr []uint32) *big.Int {
+	res := new(big.Int)
+	radix := big.NewInt(0x100000000)
+	for i := 0; i < len(arr); i++ {
+		res.Mul(res, radix)
+		res.Add(res, big.NewInt(int64(arr[i])))
+	}
+	return res
+}
+
+// fnvHash returns the 64 bit FNV-1a hash split into two 32 bit values: (MSB, LSB)
+func fnvHash(s string) (int32, int32) {
+	hash := fnv.New64a()
+	hash.Write([]byte(s))
+	h := hash.Sum64()
+	return int32(h >> 32), int32(h & 0xffffffff)
 }

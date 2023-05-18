@@ -1,11 +1,13 @@
-package witness
+package wasmer
 
 import (
 	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"math/big"
+	"reflect"
 
 	"github.com/iden3/wasmer-go/wasmer"
 )
@@ -40,7 +42,7 @@ type Circom2WitnessCalculator struct {
 // NewCircom2WitnessCalculator creates a new WitnessCalculator from the WitnessCalc
 // loaded WASM module in the runtime.
 func NewCircom2WitnessCalculator(
-	wasmBytes []byte) (WitnessCalculator, error) {
+	wasmBytes []byte) (*Circom2WitnessCalculator, error) {
 
 	wc := Circom2WitnessCalculator{}
 
@@ -582,5 +584,34 @@ func fromArray32(arr []uint32) *big.Int {
 		res.Mul(res, radix)
 		res.Add(res, big.NewInt(int64(arr[i])))
 	}
+	return res
+}
+
+// fnvHash returns the 64 bit FNV-1a hash split into two 32 bit values: (MSB, LSB)
+func fnvHash(s string) (int32, int32) {
+	hash := fnv.New64a()
+	hash.Write([]byte(s))
+	h := hash.Sum64()
+	return int32(h >> 32), int32(h & 0xffffffff)
+}
+
+// _flatSlice is a recursive helper function for flatSlice.
+func _flatSlice(acc *[]*big.Int, v interface{}) {
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice:
+		for i := 0; i < rv.Len(); i++ {
+			_flatSlice(acc, rv.Index(i).Interface())
+		}
+	default:
+		*acc = append(*acc, v.(*big.Int))
+	}
+}
+
+// flatSlice takes a structure that contains a recursive combination of slices
+// and *big.Int and flattens it into a single slice.
+func flatSlice(v interface{}) []*big.Int {
+	res := make([]*big.Int, 0)
+	_flatSlice(&res, v)
 	return res
 }

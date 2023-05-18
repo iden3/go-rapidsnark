@@ -1,6 +1,9 @@
 package witness
 
-import "math/big"
+import (
+	"errors"
+	"math/big"
+)
 
 type Option func(cfg *calcConfig)
 
@@ -29,7 +32,7 @@ func NewCalc(wasm []byte, ops ...Option) (WitnessCalculator, error) {
 		op(&config)
 	}
 	if config.wasmEngine == nil {
-		config.wasmEngine = NewCircom2WZWitnessCalculator
+		return nil, errors.New("witness calculator wasm engine not set")
 	}
 	return config.wasmEngine(wasm)
 }
