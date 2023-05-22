@@ -2,6 +2,12 @@ module github.com/iden3/go-rapidsnark/witness/wasmer
 
 go 1.18
 
-require github.com/iden3/wasmer-go v0.0.1
+require (
+	github.com/iden3/go-iden3-crypto v0.0.15
+	github.com/iden3/go-rapidsnark/witness v0.0.6
+	github.com/iden3/wasmer-go v0.0.1
+)
 
-require github.com/stretchr/testify v1.8.2 // indirect
+require golang.org/x/sys v0.6.0 // indirect
+
+replace github.com/iden3/go-rapidsnark/witness => ../

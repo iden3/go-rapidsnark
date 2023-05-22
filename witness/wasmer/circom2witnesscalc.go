@@ -9,6 +9,8 @@ import (
 	"math/big"
 	"reflect"
 
+	"github.com/iden3/go-iden3-crypto/utils"
+	"github.com/iden3/go-rapidsnark/witness"
 	"github.com/iden3/wasmer-go/wasmer"
 )
 
@@ -39,10 +41,10 @@ type Circom2WitnessCalculator struct {
 	msgStr              bytes.Buffer
 }
 
-// NewCircom2WitnessCalculator creates a new WitnessCalculator from the WitnessCalc
+// NewCircom2WitnessCalculator creates a new CalculatorImpl from the WitnessCalc
 // loaded WASM module in the runtime.
 func NewCircom2WitnessCalculator(
-	wasmBytes []byte) (*Circom2WitnessCalculator, error) {
+	wasmBytes []byte) (witness.CalculatorImpl, error) {
 
 	wc := Circom2WitnessCalculator{}
 
@@ -201,139 +203,8 @@ func NewCircom2WitnessCalculator(
 }
 
 // CalculateWitness calculates the witness given the inputs.
-func (wc *Circom2WitnessCalculator) CalculateWitness(inputs map[string]interface{}, sanityCheck bool) ([]*big.Int, error) {
-
-	w := make([]*big.Int, wc.witnessSize)
-
-	err := wc.doCalculateWitness(inputs, sanityCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := 0; i < int(wc.witnessSize); i++ {
-		_, err := wc.getWitness(i)
-		if err != nil {
-			return nil, err
-		}
-		arr := make([]uint32, wc.n32)
-		for j := 0; j < int(wc.n32); j++ {
-			val, err := wc.readSharedRWMemory(int32(j))
-			if err != nil {
-				return nil, err
-			}
-			arr[int(wc.n32)-1-j] = uint32(val.(int32))
-		}
-		w[i] = fromArray32(arr)
-	}
-
-	return w, nil
-}
-
-// CalculateBinWitness calculates the witness in binary given the inputs.
-func (wc *Circom2WitnessCalculator) CalculateBinWitness(inputs map[string]interface{}, sanityCheck bool) ([]byte, error) {
-	buff := new(bytes.Buffer)
-
-	err := wc.doCalculateWitness(inputs, sanityCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := 0; i < int(wc.witnessSize); i++ {
-		_, err := wc.getWitness(i)
-		if err != nil {
-			return nil, err
-		}
-
-		for j := 0; j < int(wc.n32); j++ {
-			val, err := wc.readSharedRWMemory(j)
-			if err != nil {
-				return nil, err
-			}
-			_ = binary.Write(buff, binary.LittleEndian, uint32(val.(int32)))
-		}
-	}
-
-	return buff.Bytes(), nil
-}
-
-// CalculateWTNSBin calculates the witness in binary given the inputs.
-func (wc *Circom2WitnessCalculator) CalculateWTNSBin(inputs map[string]interface{}, sanityCheck bool) ([]byte, error) {
-	buff := new(bytes.Buffer)
-
-	err := wc.doCalculateWitness(inputs, sanityCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	buff.Grow(int(wc.witnessSize*wc.n32 + wc.n32 + 11))
-
-	// wtns
-	_ = buff.WriteByte('w')
-	_ = buff.WriteByte('t')
-	_ = buff.WriteByte('n')
-	_ = buff.WriteByte('s')
-
-	//version 2
-	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
-
-	//number of sections: 2
-	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
-
-	//id section 1
-	_ = binary.Write(buff, binary.LittleEndian, uint32(1))
-
-	n8 := wc.n32 * 4
-	//id section 1 length in 64bytes
-	idSection1length := 8 + n8
-	_ = binary.Write(buff, binary.LittleEndian, uint64(idSection1length))
-
-	//this.n32
-	_ = binary.Write(buff, binary.LittleEndian, uint32(n8))
-
-	//prime number
-	_, err = wc.getRawPrime()
-	if err != nil {
-		return nil, err
-	}
-
-	for j := 0; j < int(wc.n32); j++ {
-		val, err := wc.readSharedRWMemory(int32(j))
-		if err != nil {
-			return nil, err
-		}
-		_ = binary.Write(buff, binary.LittleEndian, uint32(val.(int32)))
-	}
-
-	// witness size
-	_ = binary.Write(buff, binary.LittleEndian, uint32(wc.witnessSize))
-
-	//id section 2
-	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
-
-	// section 2 length
-	idSection2length := n8 * wc.witnessSize
-	_ = binary.Write(buff, binary.LittleEndian, uint64(idSection2length))
-
-	for i := 0; i < int(wc.witnessSize); i++ {
-		_, err := wc.getWitness(i)
-		if err != nil {
-			return nil, err
-		}
-
-		for j := 0; j < int(wc.n32); j++ {
-			val, err := wc.readSharedRWMemory(j)
-			if err != nil {
-				return nil, err
-			}
-			_ = binary.Write(buff, binary.LittleEndian, uint32(val.(int32)))
-		}
-	}
-
-	return buff.Bytes(), nil
-}
-
-// CalculateWitness calculates the witness given the inputs.
-func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interface{}, sanityCheck bool) (funcErr error) {
+func (wc *Circom2WitnessCalculator) doCalculateWitness(inputs map[string]interface{},
+	sanityCheck bool) (funcErr error) {
 	//input is assumed to be a map from signals to arrays of bigInts
 	sanityCheckVal := int32(0)
 	if sanityCheck {
@@ -614,4 +485,51 @@ func flatSlice(v interface{}) []*big.Int {
 	res := make([]*big.Int, 0)
 	_flatSlice(&res, v)
 	return res
+}
+
+func (wc *Circom2WitnessCalculator) Calculate(inputs map[string]interface{},
+	sanityCheck bool) (wtns witness.Wtns, err error) {
+
+	err = wc.doCalculateWitness(inputs, sanityCheck)
+	if err != nil {
+		return wtns, err
+	}
+
+	//prime number
+	_, err = wc.getRawPrime()
+	if err != nil {
+		return wtns, err
+	}
+
+	n8 := wc.n32 * 4
+	bigIntBuf := make([]byte, n8)
+	for j := 0; j < int(wc.n32); j++ {
+		val, err := wc.readSharedRWMemory(int32(j))
+		if err != nil {
+			return wtns, err
+		}
+		binary.LittleEndian.PutUint32(bigIntBuf[j*4:], uint32(val.(int32)))
+	}
+
+	wtns.Prime = new(big.Int).SetBytes(utils.SwapEndianness(bigIntBuf))
+	wtns.N32 = int(wc.n32)
+
+	wtns.Wtns = make([]*big.Int, wc.witnessSize)
+	for i := 0; i < int(wc.witnessSize); i++ {
+		_, err := wc.getWitness(i)
+		if err != nil {
+			return wtns, err
+		}
+
+		for j := 0; j < int(wc.n32); j++ {
+			val, err := wc.readSharedRWMemory(j)
+			if err != nil {
+				return wtns, err
+			}
+			binary.LittleEndian.PutUint32(bigIntBuf[j*4:], uint32(val.(int32)))
+		}
+		wtns.Wtns[i] = new(big.Int).SetBytes(utils.SwapEndianness(bigIntBuf))
+	}
+
+	return wtns, nil
 }

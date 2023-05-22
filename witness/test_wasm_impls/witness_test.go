@@ -13,29 +13,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func wasmerAdapter(code []byte) (witness.WitnessCalculator, error) {
-	wc, err := wasmer.NewCircom2WitnessCalculator(code)
-	return wc, err
-}
-
-func wazeroAdapter(code []byte) (witness.WitnessCalculator, error) {
-	wc, err := wazero.NewCircom2WZWitnessCalculator(code)
-	return wc, err
-}
-
 func TestEngines(t *testing.T) {
 	engineTestCases := []struct {
 		title   string
-		engine  func(code []byte) (witness.WitnessCalculator, error)
+		engine  func(code []byte) (witness.CalculatorImpl, error)
 		wantErr string
 	}{
 		{
 			title:  "Wazero",
-			engine: wazeroAdapter,
+			engine: wazero.NewCircom2WZWitnessCalculator,
 		},
 		{
 			title:  "Wasmer",
-			engine: wasmerAdapter,
+			engine: wasmer.NewCircom2WitnessCalculator,
 		},
 		{
 			title:   "empty",
