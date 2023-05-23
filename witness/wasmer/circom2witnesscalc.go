@@ -488,7 +488,7 @@ func flatSlice(v interface{}) []*big.Int {
 }
 
 func (wc *Circom2WitnessCalculator) Calculate(inputs map[string]interface{},
-	sanityCheck bool) (wtns witness.Wtns, err error) {
+	sanityCheck bool) (wtns witness.Witness, err error) {
 
 	err = wc.doCalculateWitness(inputs, sanityCheck)
 	if err != nil {
@@ -514,7 +514,7 @@ func (wc *Circom2WitnessCalculator) Calculate(inputs map[string]interface{},
 	wtns.Prime = new(big.Int).SetBytes(utils.SwapEndianness(bigIntBuf))
 	wtns.N32 = int(wc.n32)
 
-	wtns.Wtns = make([]*big.Int, wc.witnessSize)
+	wtns.Witness = make([]*big.Int, wc.witnessSize)
 	for i := 0; i < int(wc.witnessSize); i++ {
 		_, err := wc.getWitness(i)
 		if err != nil {
@@ -528,7 +528,7 @@ func (wc *Circom2WitnessCalculator) Calculate(inputs map[string]interface{},
 			}
 			binary.LittleEndian.PutUint32(bigIntBuf[j*4:], uint32(val.(int32)))
 		}
-		wtns.Wtns[i] = new(big.Int).SetBytes(utils.SwapEndianness(bigIntBuf))
+		wtns.Witness[i] = new(big.Int).SetBytes(utils.SwapEndianness(bigIntBuf))
 	}
 
 	return wtns, nil

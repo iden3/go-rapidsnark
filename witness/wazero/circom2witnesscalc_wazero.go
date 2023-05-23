@@ -489,7 +489,7 @@ func fnvHash(s string) (int32, int32) {
 
 // Calculate calculates the witness given the inputs.
 func (wc *Circom2WZWitnessCalculator) Calculate(inputs map[string]interface{},
-	sanityCheck bool) (wtns witness.Wtns, err error) {
+	sanityCheck bool) (wtns witness.Witness, err error) {
 
 	wCtxState := &witnessCtxState{}
 	ctx := withWtnsCtx(context.Background(), wCtxState)
@@ -515,14 +515,14 @@ func (wc *Circom2WZWitnessCalculator) Calculate(inputs map[string]interface{},
 		return wtns, err
 	}
 
-	wtns.Wtns = make([]*big.Int, wCtx.witnessSize)
+	wtns.Witness = make([]*big.Int, wCtx.witnessSize)
 
 	for i := 0; i < int(wCtx.witnessSize); i++ {
 		err = wCtx.getWitness(ctx, int32(i))
 		if err != nil {
 			return wtns, err
 		}
-		wtns.Wtns[i], err = wCtx.readInt(ctx)
+		wtns.Witness[i], err = wCtx.readInt(ctx)
 	}
 
 	wtns.Prime, err = wCtx.prime(ctx)

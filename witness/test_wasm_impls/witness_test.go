@@ -70,7 +70,7 @@ func TestEngines(t *testing.T) {
 					if engTC.engine != nil {
 						ops = append(ops, witness.WithWasmEngine(engTC.engine))
 					}
-					calc, err := witness.NewCalc(wasmBytes, ops...)
+					calc, err := witness.NewCalculator(wasmBytes, ops...)
 					if engTC.wantErr != "" {
 						require.EqualError(t, err, engTC.wantErr)
 						return

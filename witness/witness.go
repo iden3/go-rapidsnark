@@ -20,7 +20,7 @@ func WithWasmEngine(calculator func([]byte) (CalculatorImpl, error)) Option {
 
 type CalculatorImpl interface {
 	Calculate(inputs map[string]interface{},
-		sanityCheck bool) (wtns Wtns, err error)
+		sanityCheck bool) (wtns Witness, err error)
 }
 
 type Calculator interface {
@@ -47,7 +47,7 @@ func (c *calc) CalculateWitness(inputs map[string]interface{},
 	if err != nil {
 		return nil, err
 	}
-	return wtns.Wtns, nil
+	return wtns.Witness, nil
 }
 
 func (c *calc) CalculateBinWitness(inputs map[string]interface{},
@@ -59,8 +59,8 @@ func (c *calc) CalculateBinWitness(inputs map[string]interface{},
 	}
 
 	var b bytes.Buffer
-	b.Grow(wtns.N32 * 4 * len(wtns.Wtns))
-	for _, i := range wtns.Wtns {
+	b.Grow(wtns.N32 * 4 * len(wtns.Witness))
+	for _, i := range wtns.Witness {
 		bs := utils.SwapEndianness(i.Bytes())
 		b.Write(bs)
 		if len(bs) < wtns.N32*4 {
@@ -84,7 +84,7 @@ func (c *calc) CalculateWTNSBin(inputs map[string]interface{},
 	buff := new(bytes.Buffer)
 
 	n8 := wtns.N32 * 4
-	idSection2length := n8 * len(wtns.Wtns)
+	idSection2length := n8 * len(wtns.Witness)
 
 	totalLn := 4 + 4 + 4 + 4 + 8 + 4 + n8 + 4 + 4 + 8 + idSection2length
 	buff.Grow(totalLn)
@@ -114,7 +114,7 @@ func (c *calc) CalculateWTNSBin(inputs map[string]interface{},
 	}
 
 	// witness size
-	_ = binary.Write(buff, binary.LittleEndian, uint32(len(wtns.Wtns)))
+	_ = binary.Write(buff, binary.LittleEndian, uint32(len(wtns.Witness)))
 
 	//id section 2
 	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
@@ -122,7 +122,7 @@ func (c *calc) CalculateWTNSBin(inputs map[string]interface{},
 	// section 2 length
 	_ = binary.Write(buff, binary.LittleEndian, uint64(idSection2length))
 
-	for _, i := range wtns.Wtns {
+	for _, i := range wtns.Witness {
 		err = writeInt(buff, i, n8)
 		if err != nil {
 			return nil, err
@@ -145,7 +145,7 @@ func writeInt(out io.Writer, i *big.Int, bytesLn int) error {
 	return err
 }
 
-func NewCalc(wasm []byte, ops ...Option) (Calculator, error) {
+func NewCalculator(wasm []byte, ops ...Option) (Calculator, error) {
 	var config calcConfig
 	for _, op := range ops {
 		op(&config)
@@ -160,9 +160,9 @@ func NewCalc(wasm []byte, ops ...Option) (Calculator, error) {
 	return &calc{wc: wc}, nil
 }
 
-type Wtns struct {
+type Witness struct {
 	// number of int32 values required to represent the *big.Int
-	N32   int
-	Prime *big.Int
-	Wtns  []*big.Int
+	N32     int
+	Prime   *big.Int
+	Witness []*big.Int
 }
