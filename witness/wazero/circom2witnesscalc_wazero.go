@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/iden3/go-iden3-crypto/constants"
-	"github.com/iden3/go-rapidsnark/witness"
+	"github.com/iden3/go-rapidsnark/witness/v2"
 	wz "github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 )

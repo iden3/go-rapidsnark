@@ -10,7 +10,7 @@ import (
 	"reflect"
 
 	"github.com/iden3/go-iden3-crypto/utils"
-	"github.com/iden3/go-rapidsnark/witness"
+	"github.com/iden3/go-rapidsnark/witness/v2"
 	"github.com/iden3/wasmer-go/wasmer"
 )
 

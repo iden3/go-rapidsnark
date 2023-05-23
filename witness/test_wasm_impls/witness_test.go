@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/iden3/go-rapidsnark/witness"
-	"github.com/iden3/go-rapidsnark/witness/wasmer"
-	"github.com/iden3/go-rapidsnark/witness/wazero"
+	"github.com/iden3/go-rapidsnark/witness/v2"
+	"github.com/iden3/go-rapidsnark/witness/v2/wasmer"
+	"github.com/iden3/go-rapidsnark/witness/v2/wazero"
 	"github.com/stretchr/testify/require"
 )
 
