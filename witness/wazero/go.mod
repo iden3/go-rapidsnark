@@ -1,4 +1,4 @@
-module github.com/iden3/go-rapidsnark/witness/v2/wazero
+module github.com/iden3/go-rapidsnark/witness/wazero
 
 go 1.18
 

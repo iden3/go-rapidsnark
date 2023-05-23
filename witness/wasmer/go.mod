@@ -1,4 +1,4 @@
-module github.com/iden3/go-rapidsnark/witness/v2/wasmer
+module github.com/iden3/go-rapidsnark/witness/wasmer
 
 go 1.18
 
