@@ -3,7 +3,7 @@ module github.com/iden3/go-rapidsnark/witness/test-wasm-impls
 go 1.18
 
 require (
-	github.com/iden3/go-rapidsnark/witness v0.0.6
+	github.com/iden3/go-rapidsnark/witness v0.0.7-0.20230522130411-b106fd58a9a9
 	github.com/iden3/go-rapidsnark/witness/wasmer v0.0.0
 	github.com/iden3/go-rapidsnark/witness/wazero v0.0.0
 	github.com/stretchr/testify v1.8.2
