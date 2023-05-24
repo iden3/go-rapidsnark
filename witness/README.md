@@ -5,7 +5,7 @@ Calculates witness, that can be passed to a prover ([snarkjs](https://github.com
 ## Installation
 
 ```
-go get github.com/iden3/go-rapidsnark/witness
+go get github.com/iden3/go-rapidsnark/witness/v2
 ```
 
 ## Dependencies

@@ -1,28 +1,35 @@
 package witness
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"math/big"
 	"os"
 	"testing"
 
+	"github.com/iden3/go-rapidsnark/witness/v2"
+	"github.com/iden3/go-rapidsnark/witness/wasmer"
+	"github.com/iden3/go-rapidsnark/witness/wazero"
 	"github.com/stretchr/testify/require"
 )
 
 func TestEngines(t *testing.T) {
 	engineTestCases := []struct {
-		title  string
-		engine func([]byte) (WitnessCalculator, error)
+		title   string
+		engine  func(code []byte) (witness.CalculatorImpl, error)
+		wantErr string
 	}{
 		{
 			title:  "Wazero",
-			engine: NewCircom2WZWitnessCalculator,
+			engine: wazero.NewCircom2WZWitnessCalculator,
 		},
 		{
 			title:  "Wasmer",
-			engine: NewCircom2WitnessCalculator,
+			engine: wasmer.NewCircom2WitnessCalculator,
 		},
 		{
-			title:  "empty",
-			engine: nil,
+			title:   "empty",
+			wantErr: "witness calculator wasm engine not set",
 		},
 	}
 
@@ -59,41 +66,65 @@ func TestEngines(t *testing.T) {
 					inputBytes, err := os.ReadFile(circomTC.inputs)
 					require.NoError(t, err)
 
-					var ops []Option
+					var ops []witness.Option
 					if engTC.engine != nil {
-						ops = append(ops, WithWasmEngine(engTC.engine))
+						ops = append(ops, witness.WithWasmEngine(engTC.engine))
 					}
-					calc, err := NewCalc(wasmBytes, ops...)
+					calc, err := witness.NewCalculator(wasmBytes, ops...)
+					if engTC.wantErr != "" {
+						require.EqualError(t, err, engTC.wantErr)
+						return
+					}
+
 					require.NoError(t, err)
 
-					inputs, err := ParseInputs(inputBytes)
+					inputs, err := witness.ParseInputs(inputBytes)
 					require.NoError(t, err)
 
 					t.Run("CalculateWitness", func(t *testing.T) {
-						witness, err := calc.CalculateWitness(inputs, true)
-						require.NoError(t, err)
-						require.NotEmpty(t, witness)
-						require.Equal(t, circomTC.wantWtnsHex,
-							hashInts(witness))
+						wtns, err2 := calc.CalculateWitness(inputs, true)
+						require.NoError(t, err2)
+						require.NotEmpty(t, wtns)
+						require.Equal(t, circomTC.wantWtnsHex, hashInts(wtns))
 					})
 
 					t.Run("CalculateBinWitness", func(t *testing.T) {
-						witness, err := calc.CalculateBinWitness(inputs, true)
-						require.NoError(t, err)
-						require.NotEmpty(t, witness)
+						wtns, err2 := calc.CalculateBinWitness(inputs, true)
+						require.NoError(t, err2)
+						require.NotEmpty(t, wtns)
 						require.Equal(t, circomTC.wantBinWtnsHex,
-							hashBytes(witness))
+							hashBytes(wtns))
 					})
 
 					t.Run("CalculateWTNSBin", func(t *testing.T) {
-						witness, err := calc.CalculateWTNSBin(inputs, true)
-						require.NoError(t, err)
-						require.NotEmpty(t, witness)
+						wtns, err2 := calc.CalculateWTNSBin(inputs, true)
+						require.NoError(t, err2)
+						require.NotEmpty(t, wtns)
 						require.Equal(t, circomTC.wantWTNSBinHex,
-							hashBytes(witness))
+							hashBytes(wtns))
 					})
 				})
 			}
 		})
 	}
+}
+
+func hashInts(in []*big.Int) string {
+	h := md5.New()
+	for _, i := range in {
+		h.Write(i.Bytes())
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func hashBytes(in []byte) string {
+	h := md5.New()
+	n, err := h.Write(in)
+	if err != nil {
+		panic(err)
+	}
+	if n != len(in) {
+		panic("incorrect size")
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }

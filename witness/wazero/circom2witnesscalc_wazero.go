@@ -1,31 +1,32 @@
-package witness
+package wazero
 
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"math"
 	"math/big"
 	"strings"
 
 	"github.com/iden3/go-iden3-crypto/constants"
-	"github.com/tetratelabs/wazero"
+	"github.com/iden3/go-rapidsnark/witness/v2"
+	wz "github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 )
 
 type Circom2WZWitnessCalculator struct {
-	runtime        wazero.Runtime
+	runtime        wz.Runtime
 	modRuntime     api.Module
-	compiledModule wazero.CompiledModule
+	compiledModule wz.CompiledModule
 }
 
 func NewCircom2WZWitnessCalculator(
-	wasmBytes []byte) (WitnessCalculator, error) {
+	wasmBytes []byte) (witness.CalculatorImpl, error) {
 
-	runtime := wazero.NewRuntime(context.Background())
+	runtime := wz.NewRuntime(context.Background())
 
 	ctx := context.Background()
 	modRuntime, err := runtime.NewHostModuleBuilder("runtime").
@@ -82,206 +83,6 @@ func (w *Circom2WZWitnessCalculator) Close() error {
 	}
 
 	return err
-}
-
-// CalculateWitness calculates the witness given the inputs.
-func (wc *Circom2WZWitnessCalculator) CalculateWitness(inputs map[string]interface{},
-	sanityCheck bool) (wtns []*big.Int, err error) {
-
-	wCtxState := &witnessCtxState{}
-	ctx := withWtnsCtx(context.Background(), wCtxState)
-
-	cfg := wazero.NewModuleConfig()
-	var instance api.Module
-	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
-	if err != nil {
-		return nil, err
-	}
-	defer closeWithErrOrLog(ctx, instance, &err)
-
-	var wCtx witnessCtx
-	wCtx, err = calculateWtnsCtx(ctx, instance)
-	if err != nil {
-		return nil, err
-	}
-
-	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	wtns = make([]*big.Int, wCtx.witnessSize)
-
-	for i := 0; i < int(wCtx.witnessSize); i++ {
-		err = wCtx.getWitness(ctx, int32(i))
-		if err != nil {
-			return nil, err
-		}
-		arr := make([]uint32, wCtx.n32)
-		for j := 0; j < int(wCtx.n32); j++ {
-			var val int32
-			val, err = wCtx.readSharedRWMemory(ctx, int32(j))
-			if err != nil {
-				return nil, err
-			}
-			arr[int(wCtx.n32)-1-j] = uint32(val)
-		}
-		wtns[i] = fromArray32(arr)
-	}
-
-	return wtns, wCtxState.err()
-}
-
-// CalculateBinWitness calculates the witness in binary given the inputs.
-func (wc *Circom2WZWitnessCalculator) CalculateBinWitness(inputs map[string]interface{},
-	sanityCheck bool) (wtns []byte, err error) {
-
-	wCtxState := &witnessCtxState{}
-	ctx := withWtnsCtx(context.Background(), wCtxState)
-
-	cfg := wazero.NewModuleConfig()
-	var instance api.Module
-	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
-	if err != nil {
-		return nil, err
-	}
-	defer closeWithErrOrLog(ctx, instance, &err)
-
-	var wCtx witnessCtx
-	// wCtx is closure around ctx, do not return it, use only in this function.
-	wCtx, err = calculateWtnsCtx(ctx, instance)
-	if err != nil {
-		return nil, err
-	}
-
-	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	buff := new(bytes.Buffer)
-
-	for i := 0; i < int(wCtx.witnessSize); i++ {
-		err = wCtx.getWitness(ctx, int32(i))
-		if err != nil {
-			return nil, err
-		}
-
-		for j := 0; j < int(wCtx.n32); j++ {
-			val, err := wCtx.readSharedRWMemory(ctx, int32(j))
-			if err != nil {
-				return nil, err
-			}
-			_ = binary.Write(buff, binary.LittleEndian, uint32(val))
-		}
-	}
-
-	return buff.Bytes(), wCtxState.err()
-}
-
-// CalculateWTNSBin calculates the witness in binary given the inputs.
-func (wc *Circom2WZWitnessCalculator) CalculateWTNSBin(inputs map[string]interface{},
-	sanityCheck bool) (wtns []byte, err error) {
-
-	wCtxState := &witnessCtxState{}
-	ctx := withWtnsCtx(context.Background(), wCtxState)
-
-	cfg := wazero.NewModuleConfig()
-	var instance api.Module
-	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
-	if err != nil {
-		return nil, err
-	}
-	defer closeWithErrOrLog(ctx, instance, &err)
-
-	var wCtx witnessCtx
-	// wCtx is closure around ctx, do not return it, use only in this function.
-	wCtx, err = calculateWtnsCtx(ctx, instance)
-	if err != nil {
-		return nil, err
-	}
-
-	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
-	if err != nil {
-		return nil, err
-	}
-
-	buff := new(bytes.Buffer)
-
-	var wResult []uint64
-	wResult, err = instance.ExportedFunction("getWitnessSize").Call(ctx)
-	if err != nil {
-		return nil, err
-	}
-	witnessSize := api.DecodeI32(wResult[0])
-
-	buff.Grow(int(witnessSize*wCtx.n32 + wCtx.n32 + 11))
-
-	// wtns
-	_ = buff.WriteByte('w')
-	_ = buff.WriteByte('t')
-	_ = buff.WriteByte('n')
-	_ = buff.WriteByte('s')
-
-	//version 2
-	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
-
-	//number of sections: 2
-	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
-
-	//id section 1
-	_ = binary.Write(buff, binary.LittleEndian, uint32(1))
-
-	n8 := wCtx.n32 * 4
-	//id section 1 length in 64bytes
-	idSection1length := 8 + n8
-	_ = binary.Write(buff, binary.LittleEndian, uint64(idSection1length))
-
-	//this.n32
-	_ = binary.Write(buff, binary.LittleEndian, uint32(n8))
-
-	//prime number
-	_, err = instance.ExportedFunction("getRawPrime").Call(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	for j := 0; j < int(wCtx.n32); j++ {
-		data, err := wCtx.readSharedRWMemory(ctx, int32(j))
-		if err != nil {
-			return nil, err
-		}
-		_ = binary.Write(buff, binary.LittleEndian, uint32(data))
-	}
-
-	// witness size
-	_ = binary.Write(buff, binary.LittleEndian, uint32(witnessSize))
-
-	//id section 2
-	_ = binary.Write(buff, binary.LittleEndian, uint32(2))
-
-	// section 2 length
-	idSection2length := n8 * witnessSize
-	_ = binary.Write(buff, binary.LittleEndian, uint64(idSection2length))
-
-	getWitness := instance.ExportedFunction("getWitness")
-	for i := 0; i < int(witnessSize); i++ {
-		_, err = getWitness.Call(ctx, api.EncodeI32(int32(i)))
-		if err != nil {
-			return nil, err
-		}
-
-		for j := 0; j < int(wCtx.n32); j++ {
-			var data int32
-			data, err = wCtx.readSharedRWMemory(ctx, int32(j))
-			if err != nil {
-				return nil, err
-			}
-			_ = binary.Write(buff, binary.LittleEndian, uint32(data))
-		}
-	}
-
-	return buff.Bytes(), wCtxState.err()
 }
 
 func (w *Circom2WZWitnessCalculator) doCalculateWitness(ctx context.Context,
@@ -345,6 +146,30 @@ type witnessCtx struct {
 	setInputSignal      func(ctx context.Context, hMSB, hLSB, z int32) error
 	readSharedRWMemory  func(ctx context.Context, i int32) (int32, error)
 	getWitness          func(ctx context.Context, i int32) error
+	getRawPrime         func(ctx context.Context) error
+}
+
+func (wCtx *witnessCtx) prime(ctx context.Context) (*big.Int, error) {
+
+	err := wCtx.getRawPrime(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return wCtx.readInt(ctx)
+}
+
+func (wCtx *witnessCtx) readInt(ctx context.Context) (*big.Int, error) {
+	arr := make([]uint32, wCtx.n32)
+	for j := 0; j < int(wCtx.n32); j++ {
+		val, err := wCtx.readSharedRWMemory(ctx, int32(j))
+		if err != nil {
+			return nil, err
+		}
+		arr[int(wCtx.n32)-1-j] = uint32(val)
+	}
+
+	return fromArray32(arr), nil
 }
 
 func calculateWtnsCtx(ctx context.Context,
@@ -425,6 +250,12 @@ func calculateWtnsCtx(ctx context.Context,
 	_getWitness := instance.ExportedFunction("getWitness")
 	wCtx.getWitness = func(ctx context.Context, i int32) error {
 		_, err2 := _getWitness.Call(ctx, api.EncodeI32(i))
+		return err2
+	}
+
+	_getRawPrime := instance.ExportedFunction("getRawPrime")
+	wCtx.getRawPrime = func(ctx context.Context) error {
+		_, err2 := _getRawPrime.Call(ctx)
 		return err2
 	}
 
@@ -636,4 +467,68 @@ func printSharedRWMemory(ctx context.Context, m api.Module) {
 	}
 
 	wtnsCtx.msgStrs = append(wtnsCtx.msgStrs, fromArray32(arr).Text(10))
+}
+
+func fromArray32(arr []uint32) *big.Int {
+	res := new(big.Int)
+	radix := big.NewInt(0x100000000)
+	for i := 0; i < len(arr); i++ {
+		res.Mul(res, radix)
+		res.Add(res, big.NewInt(int64(arr[i])))
+	}
+	return res
+}
+
+// fnvHash returns the 64 bit FNV-1a hash split into two 32 bit values: (MSB, LSB)
+func fnvHash(s string) (int32, int32) {
+	hash := fnv.New64a()
+	hash.Write([]byte(s))
+	h := hash.Sum64()
+	return int32(h >> 32), int32(h & 0xffffffff)
+}
+
+// Calculate calculates the witness given the inputs.
+func (wc *Circom2WZWitnessCalculator) Calculate(inputs map[string]interface{},
+	sanityCheck bool) (wtns witness.Witness, err error) {
+
+	wCtxState := &witnessCtxState{}
+	ctx := withWtnsCtx(context.Background(), wCtxState)
+
+	cfg := wz.NewModuleConfig()
+	var instance api.Module
+	instance, err = wc.runtime.InstantiateModule(ctx, wc.compiledModule, cfg)
+	if err != nil {
+		return wtns, err
+	}
+	defer closeWithErrOrLog(ctx, instance, &err)
+
+	var wCtx witnessCtx
+	wCtx, err = calculateWtnsCtx(ctx, instance)
+	if err != nil {
+		return wtns, err
+	}
+
+	wtns.N32 = int(wCtx.n32)
+
+	err = wc.doCalculateWitness(ctx, wCtx, inputs, sanityCheck)
+	if err != nil {
+		return wtns, err
+	}
+
+	wtns.Witness = make([]*big.Int, wCtx.witnessSize)
+
+	for i := 0; i < int(wCtx.witnessSize); i++ {
+		err = wCtx.getWitness(ctx, int32(i))
+		if err != nil {
+			return wtns, err
+		}
+		wtns.Witness[i], err = wCtx.readInt(ctx)
+	}
+
+	wtns.Prime, err = wCtx.prime(ctx)
+	if err != nil {
+		return wtns, err
+	}
+
+	return wtns, wCtxState.err()
 }
