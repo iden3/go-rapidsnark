@@ -3,19 +3,18 @@ package witness
 import (
 	"encoding/json"
 	"fmt"
-	"hash/fnv"
 	"math/big"
 	"reflect"
 )
 
-// parseInput is a recurisve helper function for ParseInputs
+// parseInput is a recursive helper function for ParseInputs
 func parseInput(v interface{}) (interface{}, error) {
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
 	case reflect.String:
 		n, ok := new(big.Int).SetString(v.(string), 0)
 		if !ok {
-			return nil, fmt.Errorf("Error parsing input %v", v)
+			return nil, fmt.Errorf("error parsing input %v", v)
 		}
 		return n, nil
 	case reflect.Float64:
@@ -26,12 +25,12 @@ func parseInput(v interface{}) (interface{}, error) {
 			var err error
 			res[i], err = parseInput(rv.Index(i).Interface())
 			if err != nil {
-				return nil, fmt.Errorf("Error parsing input %v: %w", v, err)
+				return nil, fmt.Errorf("error parsing input %v: %w", v, err)
 			}
 		}
 		return res, nil
 	default:
-		return nil, fmt.Errorf("Unexpected type for input %v: %T", v, v)
+		return nil, fmt.Errorf("unexpected type for input %v: %T", v, v)
 	}
 }
 
@@ -73,12 +72,4 @@ func flatSlice(v interface{}) []*big.Int {
 	res := make([]*big.Int, 0)
 	_flatSlice(&res, v)
 	return res
-}
-
-// fnvHash returns the 64 bit FNV-1a hash split into two 32 bit values: (MSB, LSB)
-func fnvHash(s string) (int32, int32) {
-	hash := fnv.New64a()
-	hash.Write([]byte(s))
-	h := hash.Sum64()
-	return int32(h >> 32), int32(h & 0xffffffff)
 }
