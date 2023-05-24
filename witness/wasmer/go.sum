@@ -1,6 +1,8 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/iden3/go-iden3-crypto v0.0.15 h1:4MJYlrot1l31Fzlo2sF56u7EVFeHHJkxGXXZCtESgK4=
 github.com/iden3/go-iden3-crypto v0.0.15/go.mod h1:dLpM4vEPJ3nDHzhWFXDjzkn1qHoBeOT/3UEhXsEsP3E=
+github.com/iden3/go-rapidsnark/witness/v2 v2.0.0 h1:mkY6VDfwKVJc83QGKmwVXY2LYepidPrFAxskrjr8UCs=
+github.com/iden3/go-rapidsnark/witness/v2 v2.0.0/go.mod h1:3JRjqUfW1hgI9hzLDO0v8z/DUkR0ZUehhYLlnIfRxnA=
 github.com/iden3/wasmer-go v0.0.1 h1:TZKh8Se8B/73PvWrcu+FTU9L1k5XYAmtFbioj7l0Uog=
 github.com/iden3/wasmer-go v0.0.1/go.mod h1:ZnZBAO012M7o+Q1INXLRIxKQgEcH2FuwL0Iga8A4ufg=
 github.com/leanovate/gopter v0.2.9 h1:fQjYxZaynp97ozCzfOyOuAGOU4aU/z37zf/tOujFk7c=
