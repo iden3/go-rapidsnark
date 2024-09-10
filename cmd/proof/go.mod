@@ -4,6 +4,6 @@ go 1.18
 
 require github.com/iden3/go-rapidsnark/prover v0.0.2
 
-require github.com/iden3/go-rapidsnark/types v0.0.1 // indirect
+require github.com/iden3/go-rapidsnark/types v0.0.3 // indirect
 
 replace github.com/iden3/go-rapidsnark/prover => ../../prover
