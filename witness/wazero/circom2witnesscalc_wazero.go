@@ -482,7 +482,8 @@ func fromArray32(arr []uint32) *big.Int {
 // fnvHash returns the 64 bit FNV-1a hash split into two 32 bit values: (MSB, LSB)
 func fnvHash(s string) (int32, int32) {
 	hash := fnv.New64a()
-	hash.Write([]byte(s))
+	// sum64a.Write always returns nil as an error
+	_, _ = hash.Write([]byte(s))
 	h := hash.Sum64()
 	return int32(h >> 32), int32(h & 0xffffffff)
 }

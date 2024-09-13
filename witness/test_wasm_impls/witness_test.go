@@ -78,6 +78,10 @@ func TestEngines(t *testing.T) {
 
 					require.NoError(t, err)
 
+					defer func() {
+						require.NoError(t, calc.Close())
+					}()
+
 					inputs, err := witness.ParseInputs(inputBytes)
 					require.NoError(t, err)
 

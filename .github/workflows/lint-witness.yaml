@@ -10,27 +10,27 @@ jobs:
   lint:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.20.4
+          go-version: 1.23.1
       - name: lint witness
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.52.2
+          version: v1.61.0
           working-directory: witness
       - name: lint witness/wazero
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.52.2
+          version: v1.61.0
           working-directory: witness/wazero
       - name: lint witness/wasmer
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.52.2
+          version: v1.61.0
           working-directory: witness/wasmer
       - name: lint witness/test_wasm_impls
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.52.2
+          version: v1.61.0
           working-directory: witness/test_wasm_impls

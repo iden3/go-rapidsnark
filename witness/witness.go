@@ -30,6 +30,7 @@ type Calculator interface {
 		sanityCheck bool) ([]byte, error)
 	CalculateWTNSBin(inputs map[string]interface{},
 		sanityCheck bool) ([]byte, error)
+	Close() error
 }
 
 type calcConfig struct {
@@ -130,6 +131,14 @@ func (c *calc) CalculateWTNSBin(inputs map[string]interface{},
 	}
 
 	return buff.Bytes(), nil
+}
+
+func (c *calc) Close() error {
+	closer, ok := c.wc.(io.Closer)
+	if ok {
+		return closer.Close()
+	}
+	return nil
 }
 
 func writeInt(out io.Writer, i *big.Int, bytesLn int) error {
