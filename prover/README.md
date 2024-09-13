@@ -27,18 +27,19 @@ For the following architectures, pre-built vendored libraries are included:
 
 ## Performance optimization on x86_64 hardware
 
-Rapidsnark has optimization for recent x86_64 processors that gives ~2x speed boost, but older hardware may lack support for ADX and BMI2 instruction sets used.
+Rapidsnark has optimization for recent x86_64 processors that gives ~2x speed boost,
+but older hardware may lack support for ADX and BMI2 instruction sets used.
+If you have such hardware, you may want to disable assembly optimizations by
+specifying `rapidsnark_noasm` build tag. By default, optimizations are ON.
 
-MacOS build has it enabled. But for linux we disabled the optimization (at least for now, because GitHub Actions may use old hardware).
-
-To **enable** optimization on linux use `rapidsnark_asm` build tag:
+MacOS build there is no way to disable assembly optimizations with build tags.
+You need to build your custom library with disabled optimizations. And
+build the library with `dynamic` tag to use it instead of vendored one.
 
 ```shell
-go build -tags rapidsnark_asm
-go test -tags rapidsnark_asm
+go build -tags rapidsnark_noasm
+go test -tags rapidsnark_noasm
 ```
-
-In the future we may change default behaviour, so to force disable optimizations use `rapidsnark_noasm` build tag.
 
 ## Performance optimization on arm64 hardware
 We used NEON instruction set, and it is always enabled, so no build tags are needed.
