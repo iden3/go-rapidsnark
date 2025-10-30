@@ -1,3 +1,5 @@
+//go:build !prover_disabled
+
 package prover
 
 /*
