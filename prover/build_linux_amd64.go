@@ -1,4 +1,4 @@
-//go:build !dynamic && !rapidsnark_noasm
+//go:build !dynamic && !rapidsnark_noasm && !prover_disabled
 
 package prover
 
