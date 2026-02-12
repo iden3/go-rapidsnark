@@ -73,16 +73,10 @@ func Groth16ProverRaw(zkey []byte,
 		var proofBuffer = make([]byte, proofBufSize)
 		var publicBuffer = make([]byte, publicBufSize)
 
-		//proofBufferPointer := unsafe.Pointer(&proofBuffer[0])
 		proofBufferPointer := C.CString(string(proofBuffer))
 		proofBufSizePointer := unsafe.Pointer(&proofBufSize)
 		publicBufferPointer := C.CString(string(publicBuffer))
 		publicBufSizePointer := unsafe.Pointer(&publicBufSize)
-
-		defer func() {
-			C.free(unsafe.Pointer(proofBufferPointer))
-			C.free(unsafe.Pointer(publicBufferPointer))
-		}()
 
 		r := C.groth16_prover(
 			zkeyPointer, C.ulong(len(zkey)),
@@ -94,6 +88,9 @@ func Groth16ProverRaw(zkey []byte,
 		proofBuffer = []byte(C.GoString(proofBufferPointer))
 		publicBuffer = []byte(C.GoString(publicBufferPointer))
 		errorMessage = []byte(C.GoString(errorMessagePointer))
+
+		C.free(unsafe.Pointer(proofBufferPointer))
+		C.free(unsafe.Pointer(publicBufferPointer))
 
 		if r != 0 && r != 2 {
 			idx := bytes.IndexByte(errorMessage[:], 0)
